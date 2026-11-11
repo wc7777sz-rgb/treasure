@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>联盟宝藏 · 藏宝图共享解码站</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+SC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#08050f; --panel:#150d24; --panel2:#1d1233;
+    --line:rgba(190,150,255,.14);
+    --gold:#f5c542; --gold2:#ffe9a3; --gold-dim:rgba(245,197,66,.32);
+    --ember:#ff5f3c; --mint:#5ff0c0; --violet:#8a4dff; --rose:#ff5d8f;
+    --text:#f0e9ff; --muted:#a294c0;
+    --cell:#3a1f66;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:#08050f; color:var(--text);
+    font-family:'Noto Serif SC',serif; -webkit-font-smoothing:antialiased;
+    min-height:100vh; overflow-x:hidden;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; z-index:-3; pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 10% -8%, rgba(138,77,255,.30), transparent 62%),
+      radial-gradient(720px 480px at 94% -2%, rgba(255,95,60,.16), transparent 58%),
+      radial-gradient(900px 620px at 50% 112%, rgba(95,240,192,.07), transparent 62%),
+      #08050f;
+  }
+  body::after{
+    content:''; position:fixed; inset:0; z-index:-2; pointer-events:none; opacity:.045;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection{background:rgba(245,197,66,.28); color:#fff}
+  .display{font-family:'ZCOOL KuaiLe',cursive}
+  .latin{font-family:'Cinzel',serif; letter-spacing:.08em}
+
+  .wrap{max-width:1400px; margin:0 auto; padding:0 18px}
+
+  /* ---------- header ---------- */
+  header.top{position:relative; padding:26px 0 0}
+  .brand{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+  .emblem{
+    width:58px;height:58px;flex:none;border-radius:16px;display:grid;place-items:center;
+    background:linear-gradient(155deg,#3a1f66,#1b1030);
+    border:1px solid rgba(245,197,66,.4);
+    box-shadow:0 0 0 1px rgba(0,0,0,.5), 0 12px 30px -12px rgba(245,197,66,.55), inset 0 1px 0 rgba(255,255,255,.12);
+    position:relative; overflow:hidden;
+  }
+  .emblem::after{content:'';position:absolute;inset:-60%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.22) 50%,transparent 60%);animation:sheen 6s ease-in-out infinite}
+  @keyframes sheen{0%,70%{transform:translateX(-40%)}100%{transform:translateX(40%)}}
+  h1.title{
+    margin:0; font-size:clamp(24px,3.2vw,38px); line-height:1.1; letter-spacing:.03em;
+    background:linear-gradient(180deg,#fff8e0 8%,var(--gold) 48%,#b8862a 96%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 2px 12px rgba(245,197,66,.28));
+  }
+  .sub{color:var(--muted); font-size:12.5px; letter-spacing:.22em; margin-top:4px}
+
+  .status-chip{
+    margin-left:auto; display:flex; align-items:center; gap:9px; padding:9px 15px; border-radius:999px;
+    background:rgba(21,13,36,.8); border:1px solid var(--line); font-size:12.5px; color:var(--muted);
+    backdrop-filter:blur(8px);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px var(--mint)}
+  .dot.off{background:var(--ember);box-shadow:0 0 12px var(--ember)}
+
+  /* ---------- tabs ---------- */
+  nav.tabs{display:flex; gap:8px; margin-top:26px; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:0}
+  .tab{
+    position:relative; padding:12px 20px 14px; border:1px solid transparent; border-bottom:none;
+    border-radius:12px 12px 0 0; background:transparent; color:var(--muted); cursor:pointer;
+    font-size:14.5px; letter-spacing:.06em; display:flex; align-items:center; gap:9px; transition:.25s;
+    font-family:'Noto Serif SC',serif;
+  }
+  .tab:hover{color:#e7dbff; background:rgba(138,77,255,.10)}
+  .tab.active{color:var(--gold2); background:linear-gradient(180deg,rgba(245,197,66,.14),rgba(245,197,66,.02)); border-color:rgba(245,197,66,.28)}
+  .tab.active::after{content:'';position:absolute;left:12%;right:12%;bottom:-1px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .tab .num{font-family:'Cinzel',serif;font-size:11px;opacity:.55}
+
+  main{padding:28px 0 90px}
+  .view{display:none; animation:rise .5s cubic-bezier(.2,.8,.25,1) both}
+  .view.active{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* ---------- generic panel ---------- */
+  .panel{
+    background:linear-gradient(165deg,rgba(33,20,55,.92),rgba(16,10,28,.94));
+    border:1px solid var(--line); border-radius:20px; position:relative; overflow:hidden;
+    box-shadow:0 26px 60px -40px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .panel::before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:20px;
+    background:radial-gradient(600px 200px at 0% 0%, rgba(138,77,255,.16), transparent 70%)}
+  .panel-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .panel-h h2{margin:0;font-size:16px;letter-spacing:.1em;color:#f2e7c9;font-weight:700;display:flex;align-items:center;gap:10px}
+  .panel-b{padding:22px}
+
+  /* ---------- stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px}
+  .stat{padding:16px 18px;border-radius:16px;background:linear-gradient(160deg,rgba(138,77,255,.16),rgba(20,12,34,.9));border:1px solid var(--line);position:relative;overflow:hidden}
+  .stat b{display:block;font-family:'Cinzel',serif;font-size:26px;color:var(--gold2);line-height:1.1}
+  .stat span{font-size:12px;color:var(--muted);letter-spacing:.14em}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;
+    padding:11px 20px;border-radius:12px;font-size:13.5px;letter-spacing:.08em;font-family:inherit;
+    transition:.22s; white-space:nowrap;
+  }
+  .btn-gold{
+    background:linear-gradient(180deg,#ffdf8a,#e8b32c); color:#2a1500; font-weight:700;
+    box-shadow:0 10px 26px -12px rgba(245,197,66,.9), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .btn-gold:hover{transform:translateY(-2px); box-shadow:0 16px 30px -14px rgba(245,197,66,1)}
+  .btn-ghost{background:rgba(255,255,255,.04); border:1px solid var(--line); color:#dcd0f5}
+  .btn-ghost:hover{background:rgba(138,77,255,.16); border-color:rgba(138,77,255,.45); color:#fff}
+  .btn-danger{background:rgba(255,95,60,.1); border:1px solid rgba(255,95,60,.35); color:#ffb4a2}
+  .btn-danger:hover{background:rgba(255,95,60,.2)}
+  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+
+  /* ---------- dropzone ---------- */
+  .drop{
+    border:1.5px dashed rgba(245,197,66,.3); border-radius:18px; padding:38px 22px; text-align:center;
+    background:
+      repeating-linear-gradient(45deg, rgba(138,77,255,.05) 0 10px, transparent 10px 20px),
+      rgba(10,6,18,.5);
+    transition:.25s; cursor:pointer; position:relative;
+  }
+  .drop:hover,.drop.over{border-color:var(--gold); background-color:rgba(245,197,66,.06); transform:translateY(-2px)}
+  .drop.over{box-shadow:0 0 0 4px rgba(245,197,66,.12)}
+  .drop .ico{font-size:30px;line-height:1;margin-bottom:10px}
+  .drop h3{margin:0 0 6px;font-size:16px;color:#f6ecd2}
+  .drop p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.7}
+
+  /* ---------- stage (map preview) ---------- */
+  .stage{position:relative;width:100%;border-radius:14px;overflow:hidden;background:#0d0718;border:1px solid rgba(245,197,66,.22);box-shadow:0 18px 40px -26px #000}
+  .stage img{display:block;width:100%;height:100%;object-fit:fill}
+  .grid-lines{position:absolute;inset:0;pointer-events:none;
+    background-image:linear-gradient(to right, rgba(255,255,255,.13) 1px, transparent 1px),
+                     linear-gradient(to bottom, rgba(255,255,255,.13) 1px, transparent 1px);
+    background-position:0 0;
+  }
+  .crown-mark{
+    position:absolute; transform:translate(-50%,-50%); border:none; background:none; padding:0;
+    cursor:pointer; width:clamp(22px,7%,46px); aspect-ratio:1; display:grid; place-items:center;
+    filter:drop-shadow(0 0 10px rgba(245,197,66,.9));
+    animation:pop .4s cubic-bezier(.2,1.6,.4,1) both;
+  }
+  .crown-mark svg{width:100%;height:100%}
+  .crown-mark::after{
+    content:''; position:absolute; inset:-18%; border-radius:50%;
+    border:1.5px solid rgba(245,197,66,.75); animation:pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+  @keyframes pop{from{opacity:0;transform:translate(-50%,-50%) scale(.3)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  .crown-mark:hover{filter:drop-shadow(0 0 16px #ffe9a3) brightness(1.15)}
+
+  .match-box{position:absolute;border:2px dashed var(--mint);border-radius:8px;pointer-events:none;
+    box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 0 24px rgba(95,240,192,.5) inset; animation:breathe 2.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+
+  /* ---------- gallery ---------- */
+  .zip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+  .zip-item{position:relative;border:1px solid rgba(245,197,66,.22);border-radius:10px;overflow:hidden;
+    background:rgba(18,11,32,.72);cursor:pointer;transition:.2s}
+  .zip-item:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 12px 24px -16px rgba(245,197,66,.9)}
+  .zip-item .zn{position:absolute;left:0;right:0;bottom:0;padding:5px 7px;font-size:11px;color:#f4ecd8;
+    background:linear-gradient(180deg,transparent,rgba(8,5,16,.92));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .zip-item .zt{position:absolute;top:6px;right:6px;font-size:10px;padding:2px 6px;border-radius:20px;
+    background:rgba(10,6,18,.8);border:1px solid rgba(245,197,66,.4);color:var(--gold2)}
+  .zip-item.done{opacity:.45}
+  .zip-item img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:18px}
+  .card{
+    background:linear-gradient(170deg,rgba(40,24,66,.9),rgba(15,9,26,.95));
+    border:1px solid var(--line); border-radius:18px; overflow:hidden; position:relative;
+    transition:.28s cubic-bezier(.2,.8,.3,1); cursor:pointer;
+    animation:rise .5s both;
+  }
+  .card:hover{transform:translateY(-6px); border-color:rgba(245,197,66,.42); box-shadow:0 28px 50px -30px rgba(245,197,66,.55)}
+  .card .thumb{position:relative;aspect-ratio:4/3.4;overflow:hidden;background:radial-gradient(circle at 50% 40%,#1d1133,#0a0514 70%)}
+  .card .thumb::after{content:'';position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 34px rgba(0,0,0,.75)}
+  .card .thumb img{width:100%;height:100%;object-fit:contain;transition:.6s; opacity:.95}
+  .card:hover .thumb img{transform:scale(1.05)}
+  .card .body{padding:13px 15px 15px}
+  .card .name{font-size:14.5px;color:#f4ecd8;font-weight:700;letter-spacing:.02em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card .meta{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+  .pill{padding:2px 8px;border-radius:999px;background:rgba(138,77,255,.18);border:1px solid rgba(138,77,255,.3);color:#cbb4ff;font-size:10.5px;letter-spacing:.05em}
+  .pill.gold{background:rgba(245,197,66,.14);border-color:rgba(245,197,66,.34);color:var(--gold2)}
+  .pill.local{background:rgba(255,255,255,.05);border-color:var(--line);color:var(--muted)}
+  .card .acts{display:flex;gap:8px;margin-top:12px;opacity:0;transform:translateY(6px);transition:.25s}
+  .card:hover .acts{opacity:1;transform:none}
+  .mini{padding:7px 10px;font-size:11.5px;border-radius:9px;flex:1}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--muted)}
+  .empty .g{font-size:44px;margin-bottom:12px;filter:grayscale(.3)}
+
+  /* ---------- forms ---------- */
+  label.fl{display:block;font-size:12px;letter-spacing:.14em;color:var(--muted);margin-bottom:7px}
+  input.in,select.in,textarea.in{
+    width:100%;padding:11px 13px;border-radius:11px;background:rgba(8,5,16,.75);
+    border:1px solid var(--line);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:.2s;
+  }
+  input.in:focus,select.in:focus,textarea.in:focus{border-color:rgba(245,197,66,.55);box-shadow:0 0 0 3px rgba(245,197,66,.1)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  /* ---------- score ---------- */
+  .gauge{position:relative;display:grid;place-items:center;padding:6px 0 2px}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .val{position:absolute;text-align:center}
+  .gauge .val b{font-family:'Cinzel',serif;font-size:30px;color:var(--gold2);display:block;line-height:1}
+  .gauge .val span{font-size:10.5px;letter-spacing:.2em;color:var(--muted)}
+
+  .cand{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.02);transition:.2s;cursor:pointer}
+  .cand:hover{border-color:rgba(245,197,66,.4);background:rgba(245,197,66,.05)}
+  .cand img{width:46px;height:46px;border-radius:8px;object-fit:cover;flex:none}
+  .cand .bar{height:4px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:5px}
+  .cand .bar i{display:block;height:100%;background:linear-gradient(90deg,#8a4dff,#f5c542)}
+
+  .coord-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+  .coord{font-family:'Cinzel',serif;font-size:11px;padding:5px 9px;border-radius:8px;background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.28);color:var(--gold2)}
+
+  /* ---------- scan ---------- */
+  .scan{position:relative;overflow:hidden;border-radius:14px;background:rgba(10,6,18,.6);border:1px solid var(--line);padding:26px;text-align:center}
+  .scan::after{content:'';position:absolute;left:0;right:0;height:90px;top:-90px;
+    background:linear-gradient(180deg,transparent,rgba(245,197,66,.22),transparent);animation:scan 1.6s linear infinite}
+  @keyframes scan{to{top:100%}}
+
+  /* ---------- modal ---------- */
+  .modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:18px;
+    background:rgba(4,2,9,.82);backdrop-filter:blur(10px)}
+  .modal.open{display:flex; animation:fade .25s both}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal .box{width:min(980px,100%);max-height:90vh;overflow:auto;border-radius:22px;
+    background:linear-gradient(170deg,#1e1233,#0d0718);border:1px solid rgba(245,197,66,.25);
+    box-shadow:0 40px 100px -40px #000; animation:rise .35s both}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);z-index:120;opacity:0;pointer-events:none;
+    padding:12px 22px;border-radius:12px;font-size:13px;letter-spacing:.05em;transition:.3s;
+    background:linear-gradient(180deg,#2a1a45,#170e28);border:1px solid rgba(245,197,66,.35);color:var(--gold2);
+    box-shadow:0 20px 40px -20px #000}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast.err{border-color:rgba(255,95,60,.45);color:#ffb4a2}
+
+  .hint{font-size:11.5px;color:var(--muted);line-height:1.75}
+  .divider{height:1px;background:var(--line);margin:18px 0}
+  pre.schema{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.7;color:#c9bdf0;
+    background:rgba(8,5,16,.8);border:1px solid var(--line);border-radius:12px;padding:14px;overflow:auto;white-space:pre}
+
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:rgba(138,77,255,.35);border-radius:99px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+
+  .layout-2{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start}
+  .layout-decode{display:grid;grid-template-columns:1.45fr .85fr;gap:20px;align-items:start}
+  .layout-half{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+  @media(max-width:900px){.layout-2,.layout-decode,.layout-half{grid-template-columns:1fr!important}}
+
+  @media(max-width:860px){
+    .stats{grid-template-columns:1fr 1fr}
+    .row{grid-template-columns:1fr}
+    .card .acts{opacity:1;transform:none}
+    nav.tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:0}
+    .tab{padding:11px 14px;font-size:13px;white-space:nowrap}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="emblem">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffe9a3"/><stop offset="1" stop-color="#d99a20"/>
+          </linearGradient></defs>
+          <path d="M3 17.5h18l-1.4-8-4.1 3.2L12 6 8.5 12.7 4.4 9.5 3 17.5Z" fill="url(#g1)" stroke="#8a5c00" stroke-width="1.1" stroke-linejoin="round"/>
+          <circle cx="12" cy="4.2" r="1.4" fill="#ffe9a3" stroke="#8a5c00" stroke-width="1"/>
+          <circle cx="3.4" cy="8.2" r="1.3" fill="#ffe9a3" stroke="#8a5c00" stroke-width="1"/>
+          <circle cx="20.6" cy="8.2" r="1.3" fill="#ffe9a3" stroke="#8a5c00" stroke-width="1"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="title display">联盟宝藏 · 藏宝图解码站</h1>
+        <div class="sub latin">TREASURE MAP SHARE &amp; CROWN DECODE</div>
+      </div>
+      <div class="status-chip" id="cloudChip"><span class="dot off" id="cloudDot"></span><span id="cloudText">本地模式</span></div>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab active" data-view="gallery"><span class="num">01</span> 藏宝图库</button>
+      <button class="tab" data-view="upload"><span class="num">02</span> 上传底图</button>
+      <button class="tab" data-view="decode"><span class="num">03</span> 皇冠解码</button>
+      <button class="tab" data-view="settings"><span class="num">04</span> 云端设置</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ GALLERY ============ -->
+    <section class="view active" id="view-gallery">
+      <div class="stats">
+        <div class="stat"><b id="statMaps">0</b><span>共享底图</span></div>
+        <div class="stat"><b id="statCrowns">0</b><span>已标注皇冠</span></div>
+        <div class="stat"><b id="statMatch">—</b><span>最近一次匹配度</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">
+          <h2><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f5c542" stroke-width="1.8"><path d="M3 7h18M3 12h18M3 17h18" stroke-linecap="round"/></svg>全部藏宝图</h2>
+          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+            <input class="in" id="searchInput" placeholder="搜索底图 / 上传者" style="width:190px;padding:8px 12px;font-size:12.5px">
+            <button class="btn btn-gold" id="gotoUpload">＋ 上传底图</button>
+          </div>
+        </div>
+        <div class="panel-b">
+          <div class="gallery" id="galleryGrid"></div>
+          <div class="empty" id="galleryEmpty" style="display:none">
+            <div class="g">🏴‍☠️</div>
+            <p>图库还空着，上传第一张藏宝图吧</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ UPLOAD ============ -->
+    <section class="view" id="view-upload">
+      <div class="panel">
+        <div class="panel-h"><h2>上传藏宝图底图</h2><div class="hint">上传后全站用户可见（需开启云端共享）</div></div>
+        <div class="panel-b">
+          <div class="layout-2">
+            <div>
+              <div class="drop" id="uploadDrop">
+                <div class="ico">🗺️</div>
+                <h3>点击或拖入藏宝图截图</h3>
+                <p>支持 PNG / JPG / WEBP 单张截图<br>也可直接拖入 <b style="color:var(--gold2)">ZIP 压缩包</b>，自动解压里面的图片并批量识别</p>
+              </div>
+              <input type="file" id="uploadFile" accept="image/*,.zip,application/zip" style="display:none">
+              <div id="editorStage" style="display:none;margin-top:18px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+                  <label class="fl" style="margin:0">皇冠标注预览 · 点击格子可手动增删</label>
+                  <span class="hint" id="crownCount">0 个皇冠</span>
+                </div>
+                <div class="stage" id="uploadStage"></div>
+                <div class="hint" style="margin-top:8px">提示：若自动识别有遗漏，直接点击对应格子即可补标；再次点击取消。</div>
+              </div>
+
+              <div id="zipPanel" style="display:none;margin-top:18px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+                  <label class="fl" style="margin:0">压缩包批量识别 · 点卡片可单独调整</label>
+                  <span class="hint" id="zipCount"></span>
+                </div>
+                <div class="zip-grid" id="zipGrid"></div>
+                <div style="display:flex;gap:10px;margin-top:12px">
+                  <button class="btn btn-gold" id="zipSaveAll" style="flex:1">全部保存到共享图库</button>
+                  <button class="btn btn-ghost" id="zipClear">清空</button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;padding:9px 11px;border:1px solid rgba(245,197,66,.24);border-radius:10px;background:rgba(245,197,66,.05)">
+                <img src="data:image/png;base64,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" alt="皇冠基准" style="width:46px;height:38px;border-radius:6px;flex:none">
+                <div class="hint" style="margin:0;line-height:1.5">识别基准：只认这张皇冠图标<br>相似度 ≥ 70% 才计入，其它金色道具不会误判</div>
+              </div>
+              <div style="margin-bottom:14px">
+                <label class="fl">底图名称</label>
+                <input class="in" id="mapName" placeholder="例如：万圣墓园 · 东区第三层">
+              </div>
+              <div style="margin-bottom:14px">
+                <label class="fl">上传者昵称</label>
+                <input class="in" id="mapAuthor" placeholder="你的游戏昵称">
+              </div>
+              <div class="row" style="margin-bottom:14px">
+                <div><label class="fl">列数</label><input class="in" id="mapCols" type="number" min="3" max="30" value="10"></div>
+                <div><label class="fl">行数</label><input class="in" id="mapRows" type="number" min="3" max="30" value="12"></div>
+              </div>
+              <button class="btn btn-ghost" id="autoDetect" style="width:100%;margin-bottom:10px">✨ 重新自动识别皇冠</button>
+              <button class="btn btn-gold" id="saveMap" style="width:100%" disabled>保存到共享图库</button>
+              <div class="divider"></div>
+              <p class="hint">识别原理：以这张皇冠图标本身作为唯一模板，在每一格内做多尺度归一化互相关（NCC）比对，相似度 ≥ 70% 才判定为皇冠。金币、宝箱、盾牌等其它金色道具不会被计入。若仍有遗漏或误判，点击格子即可手动增删。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DECODE ============ -->
+    <section class="view" id="view-decode">
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-h"><h2>上传待解码的皇冠截图</h2><div class="hint">只需包含皇冠的一小块截图，也能定位到底图</div></div>
+        <div class="panel-b">
+          <div class="drop" id="decodeDrop">
+            <div class="ico">👑</div>
+            <h3>点击或拖入皇冠位置截图</h3>
+            <p>上传后将在共享图库中做多尺度模板匹配<br>自动找出相似度最高的底图，并标注该图全部皇冠</p>
+          </div>
+          <input type="file" id="decodeFile" accept="image/*" style="display:none">
+          <div id="decodeProgress" style="display:none;margin-top:18px" class="scan">
+            <div class="latin" style="color:var(--gold2);letter-spacing:.2em;font-size:13px" id="scanText">正在匹配…</div>
+            <div class="hint" style="margin-top:6px" id="scanSub">多尺度滑动窗口比对中</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="decodeResult" style="display:none">
+        <div class="layout-decode">
+          <div class="panel">
+            <div class="panel-h">
+              <h2 id="resultTitle">匹配结果</h2>
+              <button class="btn btn-ghost" id="downloadBtn" style="padding:8px 14px;font-size:12px">下载标注图</button>
+            </div>
+            <div class="panel-b">
+              <div class="stage" id="resultStage" style="aspect-ratio:9/11"></div>
+              <div class="coord-list" id="resultCoords" style="margin-top:14px"></div>
+            </div>
+          </div>
+          <div>
+            <div class="panel" style="margin-bottom:16px">
+              <div class="panel-h"><h2>相似度</h2></div>
+              <div class="panel-b" style="padding-top:10px">
+                <div class="gauge" id="gaugeBox"></div>
+                <div id="confLabel" class="hint" style="text-align:center;margin-top:2px"></div>
+                <div class="divider" style="margin:14px 0"></div>
+                <div class="hint" id="matchInfo"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-h"><h2>其他候选</h2></div>
+              <div class="panel-b" style="display:grid;gap:9px" id="candidateList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section class="view" id="view-settings">
+      <div class="layout-half">
+        <div class="panel">
+          <div class="panel-h"><h2>云端共享设置</h2></div>
+          <div class="panel-b">
+            <div style="margin-bottom:14px">
+              <label class="fl">共享模式</label>
+              <select class="in" id="cloudMode">
+                <option value="local">本地模式（仅本机可见）</option>
+                <option value="supabase">Supabase 云端（推荐）</option>
+                <option value="rest">自建 REST 接口</option>
+              </select>
+            </div>
+            <div id="cloudFields" style="display:none">
+              <div style="margin-bottom:14px">
+                <label class="fl">接口地址 / 项目 URL</label>
+                <input class="in" id="cloudUrl" placeholder="https://xxxx.supabase.co">
+              </div>
+              <div style="margin-bottom:14px">
+                <label class="fl">公钥 Anon Key</label>
+                <input class="in" id="cloudKey" placeholder="eyJhbGciOi...">
+              </div>
+              <div style="margin-bottom:14px" id="tableField">
+                <label class="fl">数据表名</label>
+                <input class="in" id="cloudTable" value="treasure_maps">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-ghost" id="testCloud" style="flex:1">测试连接</button>
+              <button class="btn btn-gold" id="saveCloud" style="flex:1">保存设置</button>
+            </div>
+            <div class="divider"></div>
+            <p class="hint">开启云端后，任何用户上传的底图与皇冠标注都会同步到同一张表，解码时会把全站数据一起参与匹配。</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h"><h2>数据结构说明</h2></div>
+          <div class="panel-b">
+            <p class="hint" style="margin-top:0">Supabase 建表 SQL：</p>
+            <pre class="schema">create table treasure_maps (
+  id text primary key,
+  name text,
+  author text,
+  rows int,
+  cols int,
+  w int,
+  h int,
+  image text,          -- dataURL 或图片公网地址
+  crowns jsonb,        -- [{r,c,x,y}]
+  created_at timestamptz default now()
+);
+alter table treasure_maps enable row level security;
+create policy "public read" on treasure_maps
+  for select using (true);
+create policy "public insert" on treasure_maps
+  for insert with check (true);</pre>
+            <div class="divider"></div>
+            <p class="hint">自建 REST 接口约定：<br>GET 接口地址 → 返回数组；POST 接口地址（JSON body）→ 新增；DELETE 接口地址?id=xxx → 删除。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- detail modal -->
+<div class="modal" id="detailModal">
+  <div class="box">
+    <div class="panel-h">
+      <h2 id="detailTitle">藏宝图详情</h2>
+      <div style="display:flex;gap:9px">
+        <button class="btn btn-ghost" id="detailDownload" style="padding:8px 14px;font-size:12px">下载标注图</button>
+        <button class="btn btn-danger" id="detailDelete" style="padding:8px 14px;font-size:12px">删除</button>
+        <button class="btn btn-ghost" id="detailClose" style="padding:8px 14px;font-size:12px">关闭</button>
+      </div>
+    </div>
+    <div class="panel-b">
+      <div class="stage" id="detailStage"></div>
+      <div class="hint" id="detailMeta" style="margin-top:12px"></div>
+      <div class="coord-list" id="detailCoords" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+/* ============ 基础工具 ============ */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const LS_MAPS = 'tb_maps_v1';
+const LS_CLOUD = 'tb_cloud_v1';
+const uid = () => 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+let lastMatchAr = 1;
+
+const state = {
+  maps: [],
+  cloud: { mode: 'local', url: '', key: '', table: 'treasure_maps' },
+  draft: null,
+  lastMatch: null
+};
+
+function toast(msg, type) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type === 'err' ? ' err' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = 'toast', 2600);
+}
+
+function loadImage(src) {
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = rej;
+    im.src = src;
+  });
+}
+
+function fileToDataURL(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+}
+
+async function shrink(img, maxW) {
+  if (img.width <= maxW) return img.src;
+  const c = document.createElement('canvas');
+  c.width = maxW;
+  c.height = Math.round(img.height * maxW / img.width);
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.9);
+}
+
+const crownSVG = `<svg viewBox="0 0 24 24" fill="none">
+<defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4c9"/><stop offset=".5" stop-color="#f5c542"/><stop offset="1" stop-color="#c98a12"/></linearGradient></defs>
+<path d="M2.4 19.2h19.2l-1.5-11-4.6 3.9L12 5.2l-3.5 6.9-4.6-3.9-1.5 11Z" fill="url(#cg)" stroke="#7a4c00" stroke-width="1.2" stroke-linejoin="round"/>
+<circle cx="12" cy="3.4" r="1.5" fill="#ffeaa8" stroke="#7a4c00" stroke-width=".9"/>
+<circle cx="2.4" cy="6.6" r="1.4" fill="#ffeaa8" stroke="#7a4c00" stroke-width=".9"/>
+<circle cx="21.6" cy="6.6" r="1.4" fill="#ffeaa8" stroke="#7a4c00" stroke-width=".9"/>
+<circle cx="12" cy="15.6" r="1.5" fill="#ff5d8f" opacity=".9"/></svg>`;
+
+/* ============ 云端存储适配 ============ */
+function loadCloudCfg() {
+  try {
+    const c = JSON.parse(localStorage.getItem(LS_CLOUD) || '{}');
+    Object.assign(state.cloud, c);
+  } catch (e) {}
+}
+function persistCloudCfg() {
+  localStorage.setItem(LS_CLOUD, JSON.stringify(state.cloud));
+}
+function cloudReady() {
+  const c = state.cloud;
+  return c.mode !== 'local' && !!c.url && (c.mode === 'rest' || !!c.key);
+}
+function cloudHeaders() {
+  const c = state.cloud, h = { 'Content-Type': 'application/json' };
+  if (c.mode === 'supabase') { h.apikey = c.key; h.Authorization = 'Bearer ' + c.key; }
+  return h;
+}
+function remoteEndpoint(query) {
+  const c = state.cloud, base = c.url.replace(/\/$/, '');
+  if (c.mode === 'supabase') return base + '/rest/v1/' + c.table + (query || '');
+  return base + (query || '');
+}
+
+function normalizeRow(r) {
+  return {
+    id: r.id,
+    name: r.name || '未命名藏宝图',
+    author: r.author || '匿名',
+    rows: +(r.rows || 12),
+    cols: +(r.cols || 10),
+    w: +(r.w || 0),
+    h: +(r.h || 0),
+    image: r.image,
+    crowns: Array.isArray(r.crowns) ? r.crowns : (typeof r.crowns === 'string' ? JSON.parse(r.crowns || '[]') : []),
+    created_at: r.created_at || r.createdAt || new Date().toISOString(),
+    origin: 'cloud'
+  };
+}
+
+async function remoteList() {
+  if (!cloudReady()) return [];
+  const q = state.cloud.mode === 'supabase' ? '?select=*&order=created_at.desc' : '';
+  const r = await fetch(remoteEndpoint(q), { headers: cloudHeaders() });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const data = await r.json();
+  return (Array.isArray(data) ? data : []).map(normalizeRow);
+}
+
+async function remoteInsert(map) {
+  if (!cloudReady()) return false;
+  const body = {
+    id: map.id, name: map.name, author: map.author, rows: map.rows, cols: map.cols,
+    w: map.w, h: map.h, image: map.image, crowns: map.crowns,
+    created_at: map.created_at
+  };
+  const r = await fetch(remoteEndpoint(), { method: 'POST', headers: cloudHeaders(), body: JSON.stringify(body) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return true;
+}
+
+async function remoteDelete(id) {
+  if (!cloudReady()) return false;
+  const c = state.cloud;
+  const url = c.mode === 'supabase'
+    ? remoteEndpoint('?id=eq.' + encodeURIComponent(id))
+    : remoteEndpoint((c.url.includes('?') ? '&' : '?') + 'id=' + encodeURIComponent(id));
+  const r = await fetch(url, { method: 'DELETE', headers: cloudHeaders() });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return true;
+}
+
+/* ============ 本地存储 ============ */
+function localMaps() {
+  try { return JSON.parse(localStorage.getItem(LS_MAPS) || '[]'); } catch (e) { return []; }
+}
+function saveLocalMaps(list) {
+  try {
+    localStorage.setItem(LS_MAPS, JSON.stringify(list));
+    return true;
+  } catch (e) {
+    toast('本地空间不足，建议开启云端共享', 'err');
+    return false;
+  }
+}
+
+/* ============ 皇冠判定：仅以这张皇冠图标为准（模板匹配） ============ */
+const CROWN_TPL_SRC = 'data:image/png;base64,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';
+const CROWN_THRESHOLD = 0.70;
+let _crownTpl = null;
+function loadCrownTpl() {
+  if (_crownTpl) return Promise.resolve(_crownTpl);
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => { _crownTpl = im; res(im); };
+    im.onerror = () => res(null);
+    im.src = CROWN_TPL_SRC;
+  });
+}
+
+function toGrayCanvas(cv) {
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+  const n = cv.width * cv.height;
+  const g = new Float32Array(n);
+  for (let i = 0, p = 0; p < n; i += 4, p++) {
+    g[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+  }
+  return g;
+}
+
+function longestRun(flags, minLen) {
+  let s = -1, best = null;
+  for (let i = 0; i < flags.length; i++) {
+    if (flags[i] && s < 0) s = i;
+    const end = (!flags[i] || i === flags.length - 1) && s >= 0;
+    if (end) {
+      const e = flags[i] ? i : i - 1;
+      if (!best || e - s > best[1] - best[0]) best = [s, e];
+      s = -1;
+    }
+  }
+  if (!best || best[1] - best[0] < minLen) return null;
+  return best;
+}
+
+/* 在整张截图里定位棋盘区域（紫色格阵），找不到就退回整图 */
+function detectBoardRect(img) {
+  const W0 = 300;
+  const H0 = Math.max(1, Math.round(img.height * W0 / img.width));
+  const cv = document.createElement('canvas');
+  cv.width = W0; cv.height = H0;
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, W0, H0);
+  const d = ctx.getImageData(0, 0, W0, H0).data;
+  const n = W0 * H0;
+  const mask = new Uint8Array(n);
+  for (let i = 0, p = 0; p < n; i += 4, p++) {
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    if (b > 65 && (b - g) > 35 && r > 25 && r < 210 && g < 140) mask[p] = 1;
+  }
+  const rowF = new Uint8Array(H0), colF = new Uint8Array(W0);
+  for (let y = 0; y < H0; y++) {
+    let c = 0;
+    for (let x = 0; x < W0; x++) c += mask[y * W0 + x];
+    rowF[y] = c / W0 > 0.5 ? 1 : 0;
+  }
+  const ry = longestRun(rowF, Math.round(H0 * 0.15));
+  if (!ry) return null;
+  const y0 = ry[0], y1 = ry[1];
+  const bandH = y1 - y0 + 1;
+  for (let x = 0; x < W0; x++) {
+    let c = 0;
+    for (let y = y0; y <= y1; y++) c += mask[y * W0 + x];
+    colF[x] = c / bandH > 0.5 ? 1 : 0;
+  }
+  const rx = longestRun(colF, Math.round(W0 * 0.15));
+  if (!rx) return null;
+  const x0 = rx[0], x1 = rx[1];
+  const kx = img.width / W0, ky = img.height / H0;
+  return { x: x0 * kx, y: y0 * ky, w: (x1 - x0 + 1) * kx, h: (y1 - y0 + 1) * ky };
+}
+
+/* 只认这一种皇冠：把皇冠图标当模板，逐格做多尺度归一化互相关（两阶段：粗扫 + 精修） */
+function nccScan(g, bw, bh, cx, cy, tpls, off, step, cxo, cyo) {
+  let best = -2, bx = 0, by = 0;
+  const x0 = cxo === undefined ? -off : cxo - off;
+  const x1 = cxo === undefined ? off : cxo + off;
+  const y0 = cyo === undefined ? -off : cyo - off;
+  const y1 = cyo === undefined ? off : cyo + off;
+  for (let ti = 0; ti < tpls.length; ti++) {
+    const T = tpls[ti], pw = T.w, ph = T.h, td = T.d;
+    for (let oy = y0; oy <= y1; oy += step) {
+      const y = Math.round(cy + oy - ph / 2);
+      if (y < 0 || y + ph > bh) continue;
+      for (let ox = x0; ox <= x1; ox += step) {
+        const x = Math.round(cx + ox - pw / 2);
+        if (x < 0 || x + pw > bw) continue;
+        let mean = 0;
+        for (let j = 0; j < ph; j++) {
+          const o = (y + j) * bw + x;
+          for (let i = 0; i < pw; i++) mean += g[o + i];
+        }
+        mean /= (pw * ph);
+        let dot = 0, sq = 0;
+        for (let j = 0; j < ph; j++) {
+          const o = (y + j) * bw + x, to = j * pw;
+          for (let i = 0; i < pw; i++) {
+            const v = g[o + i] - mean;
+            dot += v * td[to + i];
+            sq += v * v;
+          }
+        }
+        if (sq < 1e-4) continue;
+        const sc = dot / (Math.sqrt(sq) * T.norm);
+        if (sc > best) { best = sc; bx = ox; by = oy; }
+      }
+    }
+  }
+  return { score: best, ox: bx, oy: by };
+}
+
+async function detectCrowns(img, rows, cols) {
+  rows = Math.max(1, rows | 0); cols = Math.max(1, cols | 0);
+  const tplImg = await loadCrownTpl();
+  if (!tplImg) return [];
+
+  const rect = detectBoardRect(img) || { x: 0, y: 0, w: img.width, h: img.height };
+  const CELL = 42;
+  const bw = CELL * cols, bh = CELL * rows;
+  const cv = document.createElement('canvas');
+  cv.width = bw; cv.height = bh;
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, 0, 0, bw, bh);
+  const g = toGrayCanvas(cv);
+
+  const ratios = [0.70, 0.85, 1.00, 1.15, 1.30];
+  const tpls = [];
+  ratios.forEach(ratio => {
+    const tw = Math.max(6, Math.round(CELL * ratio));
+    const th = Math.max(6, Math.round(tw * tplImg.height / tplImg.width));
+    if (tw >= bw || th >= bh) return;
+    const c2 = document.createElement('canvas');
+    c2.width = tw; c2.height = th;
+    const cx2 = c2.getContext('2d', { willReadFrequently: true });
+    cx2.imageSmoothingEnabled = true;
+    cx2.imageSmoothingQuality = 'high';
+    cx2.drawImage(tplImg, 0, 0, tw, th);
+    const dd = cx2.getImageData(0, 0, tw, th).data;
+    const t = new Float32Array(tw * th);
+    let mean = 0;
+    for (let i = 0, p = 0; p < t.length; i += 4, p++) {
+      t[p] = 0.299 * dd[i] + 0.587 * dd[i + 1] + 0.114 * dd[i + 2];
+      mean += t[p];
+    }
+    mean /= t.length;
+    let sq = 0;
+    for (let p = 0; p < t.length; p++) { t[p] -= mean; sq += t[p] * t[p]; }
+    tpls.push({ w: tw, h: th, d: t, norm: Math.sqrt(sq) || 1e-6 });
+  });
+  if (tpls.length < 3) return [];
+  const coarseTpls = [tpls[1], tpls[3]];
+
+  const out = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cx = (c + 0.5) * CELL, cy = (r + 0.5) * CELL;
+      const rough = nccScan(g, bw, bh, cx, cy, coarseTpls, 15, 5);
+      if (rough.score < 0.50) continue;
+      const fine = nccScan(g, bw, bh, cx, cy, tpls, 4, 1, rough.ox, rough.oy);
+      const sc = Math.max(rough.score, fine.score);
+      if (sc >= CROWN_THRESHOLD) {
+        out.push({ r, c, x: (c + 0.5) / cols, y: (r + 0.5) / rows, score: Math.round(sc * 100) });
+      }
+    }
+  }
+  out.sort((a, b) => b.score - a.score);
+  return out;
+}
+
+/* ============ 渲染：地图舞台 ============ */
+function renderStage(host, map, opts) {
+  opts = opts || {};
+  host.innerHTML = '';
+  host.onclick = null;
+  host.style.aspectRatio = map.w && map.h ? map.w + ' / ' + map.h : '9 / 11';
+
+  const img = document.createElement('img');
+  img.src = map.image;
+  img.alt = map.name;
+  host.appendChild(img);
+
+  const grid = document.createElement('div');
+  grid.className = 'grid-lines';
+  grid.style.backgroundSize = (100 / map.cols) + '% ' + (100 / map.rows) + '%';
+  host.appendChild(grid);
+
+  if (opts.matchBox) {
+    const b = document.createElement('div');
+    b.className = 'match-box';
+    b.style.left = (opts.matchBox.x * 100) + '%';
+    b.style.top = (opts.matchBox.y * 100) + '%';
+    b.style.width = (opts.matchBox.w * 100) + '%';
+    b.style.height = (opts.matchBox.h * 100) + '%';
+    host.appendChild(b);
+  }
+
+  (map.crowns || []).forEach((cw, i) => {
+    const el = document.createElement('div');
+    el.className = 'crown-mark';
+    el.style.left = (cw.x * 100) + '%';
+    el.style.top = (cw.y * 100) + '%';
+    el.style.animationDelay = (i * 0.05) + 's';
+    el.innerHTML = crownSVG;
+    el.title = `第 ${cw.r + 1} 行 · 第 ${cw.c + 1} 列` + (cw.score ? ` · 相似度 ${cw.score}%` : '');
+    if (opts.onCrownClick) el.addEventListener('click', e => { e.stopPropagation(); opts.onCrownClick(cw, i); });
+    host.appendChild(el);
+  });
+
+  if (opts.onCellClick) {
+    host.style.cursor = 'crosshair';
+    host.onclick = e => {
+      const rect = host.getBoundingClientRect();
+      const fx = (e.clientX - rect.left) / rect.width;
+      const fy = (e.clientY - rect.top) / rect.height;
+      if (fx < 0 || fy < 0 || fx > 1 || fy > 1) return;
+      opts.onCellClick(Math.min(map.rows - 1, Math.floor(fy * map.rows)), Math.min(map.cols - 1, Math.floor(fx * map.cols)));
+    };
+  }
+}
+
+/* ============ 匹配算法 ============ */
+function grayFrom(src, w, h) {
+  const sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
+  h = h || Math.max(1, Math.round(w * sh / sw));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(src, 0, 0, w, h);
+  const d = ctx.getImageData(0, 0, w, h).data;
+  const g = new Float32Array(w * h);
+  for (let i = 0, p = 0; p < g.length; i += 4, p++) {
+    const r = d[i], gg = d[i + 1], b = d[i + 2];
+    const lum = 0.299 * r + 0.587 * gg + 0.114 * b;
+    const goldness = Math.min(1, Math.max(0, (r - b - 20) / 70));
+    g[p] = lum + 229.5 * goldness;
+  }
+  return { d: g, w, h };
+}
+
+function nccSearch(base, tpl, step, region) {
+  const bw = base.w, bh = base.h, bd = base.d;
+  const tw = tpl.w, th = tpl.h, td = tpl.d;
+  const n = tw * th;
+  let tm = 0;
+  for (let i = 0; i < n; i++) tm += td[i];
+  tm /= n;
+  const tdc = new Float32Array(n);
+  let tsq = 0;
+  for (let i = 0; i < n; i++) { const v = td[i] - tm; tdc[i] = v; tsq += v * v; }
+  const tNorm = Math.sqrt(tsq) || 1e-6;
+
+  let x0 = 0, y0 = 0, x1 = bw - tw, y1 = bh - th;
+  if (region) {
+    x0 = Math.max(0, region.x0); y0 = Math.max(0, region.y0);
+    x1 = Math.min(x1, region.x1); y1 = Math.min(y1, region.y1);
+  }
+  if (x1 < x0 || y1 < y0) return { score: -1, x: 0, y: 0 };
+
+  let best = { score: -2, x: x0, y: y0 };
+  for (let y = y0; y <= y1; y += step) {
+    for (let x = x0; x <= x1; x += step) {
+      let s = 0, s2 = 0, dot = 0;
+      for (let j = 0; j < th; j++) {
+        const bo = (y + j) * bw + x, to = j * tw;
+        for (let i = 0; i < tw; i++) {
+          const v = bd[bo + i];
+          s += v; s2 += v * v; dot += v * tdc[to + i];
+        }
+      }
+      const m = s / n;
+      const va = s2 - n * m * m;
+      if (va <= 1e-3) continue;
+      const sc = dot / (tNorm * Math.sqrt(va));
+      if (sc > best.score) best = { score: sc, x, y };
+    }
+  }
+  return best;
+}
+
+const SCALES = [0.3, 0.38, 0.48, 0.6, 0.74, 0.88, 1.0];
+
+/* 裁到棋盘区域再比对，避免手机截图上下装饰/按钮干扰相似度 */
+function prepareRoi(img) {
+  const r = detectBoardRect(img);
+  const full = { x: 0, y: 0, w: img.width, h: img.height };
+  if (!r || r.w < img.width * 0.35 || r.h < img.height * 0.35) return { img, roi: full };
+  if (r.w > img.width * 0.99 && r.h > img.height * 0.99) return { img, roi: full };
+  const c = document.createElement('canvas');
+  c.width = Math.max(8, Math.round(r.w));
+  c.height = Math.max(8, Math.round(r.h));
+  const cctx = c.getContext('2d');
+  cctx.imageSmoothingEnabled = true;
+  cctx.imageSmoothingQuality = 'high';
+  cctx.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
+  return { img: c, roi: { x: r.x, y: r.y, w: r.w, h: r.h } };
+}
+
+function matchBoxFrac(f, mapW, mapH, ar) {
+  const roi = f.roi || { x: 0, y: 0, w: mapW, h: mapH };
+  const baseW = f.W, baseH = Math.round(baseW * roi.h / roi.w);
+  const tw = Math.round(baseW * f.s), th = Math.round(tw * ar);
+  return {
+    x: (roi.x + f.x / baseW * roi.w) / mapW,
+    y: (roi.y + f.y / baseH * roi.h) / mapH,
+    w: (tw / baseW * roi.w) / mapW,
+    h: (th / baseH * roi.h) / mapH
+  };
+}
+
+async function coarseMatch(baseImg, queryImg) {
+  const BW = 96;
+  const base = grayFrom(baseImg, BW);
+  let best = { score: -2, s: 0, x: 0, y: 0, W: BW };
+  const ar = queryImg.height / queryImg.width;
+  for (const s of SCALES) {
+    let tw = Math.round(BW * s);
+    let th = Math.round(tw * ar);
+    if (tw > base.w) { tw = base.w; th = Math.round(tw * ar); }
+    if (th > base.h) { th = base.h; tw = Math.round(th / ar); }
+    if (tw < 8 || th < 8 || tw > base.w || th > base.h) continue;
+    const tpl = grayFrom(queryImg, tw, th);
+    const r = nccSearch(base, tpl, 2);
+    if (r.score > best.score) best = { score: r.score, s, x: r.x, y: r.y, W: BW };
+  }
+  return best;
+}
+
+function refineMatch(baseImg, queryImg, guess, targetW, padPx) {
+  const base = grayFrom(baseImg, targetW);
+  const k = targetW / guess.W;
+  const ar = queryImg.height / queryImg.width;
+  const cx = Math.round(guess.x * k), cy = Math.round(guess.y * k);
+  const pad = padPx || Math.max(3, Math.round(3 * k));
+  let best = { score: -2, s: guess.s, x: guess.x, y: guess.y, W: targetW };
+  for (const ds of [0.93, 1, 1.07]) {
+    const s = guess.s * ds;
+    let tw = Math.round(targetW * s);
+    let th = Math.round(tw * ar);
+    if (tw > base.w) { tw = base.w; th = Math.round(tw * ar); }
+    if (th > base.h) { th = base.h; tw = Math.round(th / ar); }
+    if (tw < 8 || th < 8 || tw > base.w || th > base.h) continue;
+    const tpl = grayFrom(queryImg, tw, th);
+    const r = nccSearch(base, tpl, 1, { x0: cx - pad, y0: cy - pad, x1: cx + pad, y1: cy + pad });
+    if (r.score > best.score) best = { score: r.score, s, x: r.x, y: r.y, W: targetW };
+  }
+  return best;
+}
+
+/* ============ 图库渲染 ============ */
+function mapStats(list) {
+  return list.reduce((n, m) => n + (m.crowns ? m.crowns.length : 0), 0);
+}
+
+function renderGallery() {
+  const grid = $('#galleryGrid');
+  const q = ($('#searchInput').value || '').trim().toLowerCase();
+  const list = state.maps.filter(m => !q || (m.name + ' ' + m.author).toLowerCase().includes(q))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  grid.innerHTML = '';
+  $('#galleryEmpty').style.display = list.length ? 'none' : 'block';
+  $('#statMaps').textContent = state.maps.length;
+  $('#statCrowns').textContent = mapStats(state.maps);
+
+  list.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.animationDelay = Math.min(i * 40, 400) + 'ms';
+    card.innerHTML = `
+      <div class="thumb"><img src="${m.image}" alt=""></div>
+      <div class="body">
+        <div class="name">${escapeHTML(m.name)}</div>
+        <div class="meta">
+          <span class="pill gold">${m.crowns.length} 皇冠</span>
+          <span class="pill">${m.cols}×${m.rows}</span>
+          <span class="pill ${m.origin === 'cloud' ? '' : 'local'}">${m.origin === 'cloud' ? '云端' : '本机'}</span>
+        </div>
+        <div class="meta" style="margin-top:6px">${escapeHTML(m.author)} · ${timeAgo(m.created_at)}</div>
+        <div class="acts">
+          <button class="mini btn btn-ghost" data-act="decode">用它解码</button>
+          <button class="mini btn btn-danger" data-act="del">删除</button>
+        </div>
+      </div>`;
+    card.addEventListener('click', e => {
+      const act = e.target.dataset.act;
+      if (act === 'del') { e.stopPropagation(); removeMap(m); return; }
+      if (act === 'decode') { e.stopPropagation(); switchView('decode'); return; }
+      openDetail(m);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function escapeHTML(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function timeAgo(iso) {
+  const t = new Date(iso).getTime();
+  if (!t) return '刚刚';
+  const d = Date.now() - t;
+  if (d < 60000) return '刚刚';
+  if (d < 3600000) return Math.floor(d / 60000) + ' 分钟前';
+  if (d < 86400000) return Math.floor(d / 3600000) + ' 小时前';
+  return Math.floor(d / 86400000) + ' 天前';
+}
+
+/* ============ 交互：视图切换 ============ */
+function switchView(name) {
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
+  $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============ 上传流程 ============ */
+const draft = { img: null, rows: 12, cols: 10, crowns: [], name: '', author: '' };
+
+/* ============ ZIP 批量导入（浏览器内解压，无需后端） ============ */
+const IMG_RE = /\.(png|jpe?g|webp|gif|bmp)$/i;
+const zipItems = [];
+let zipBusy = false;
+
+function decodeZipName(raw, utf8flag) {
+  if (utf8flag) { try { return new TextDecoder('utf-8').decode(raw); } catch (e) {} }
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(raw); }
+  catch (e) {
+    try { return new TextDecoder('gbk').decode(raw); } catch (e2) { return ''; }
+  }
+}
+
+function readZipEntries(buf) {
+  const dv = new DataView(buf);
+  let eocd = -1;
+  const min = Math.max(0, buf.byteLength - 66000);
+  for (let i = buf.byteLength - 22; i >= min; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('not a zip');
+  const total = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const out = [];
+  for (let i = 0; i < total; i++) {
+    if (p + 46 > buf.byteLength || dv.getUint32(p, true) !== 0x02014b50) break;
+    const flags = dv.getUint16(p + 8, true);
+    const method = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const cmtLen = dv.getUint16(p + 32, true);
+    const lho = dv.getUint32(p + 42, true);
+    const name = decodeZipName(new Uint8Array(buf, p + 46, nameLen), !!(flags & 0x800));
+    p += 46 + nameLen + extraLen + cmtLen;
+    if (!IMG_RE.test(name) || !compSize || compSize === 0xFFFFFFFF) continue;
+    if (lho + 30 > buf.byteLength) continue;
+    const lnLen = dv.getUint16(lho + 26, true), leLen = dv.getUint16(lho + 28, true);
+    const start = lho + 30 + lnLen + leLen;
+    if (start + compSize > buf.byteLength) continue;
+    out.push({ name, method, data: new Uint8Array(buf, start, compSize) });
+  }
+  return out;
+}
+
+async function unzipEntry(entry) {
+  if (entry.method === 0) return entry.data;
+  if (typeof DecompressionStream === 'undefined') throw new Error('no DecompressionStream');
+  const ds = new DecompressionStream('deflate-raw');
+  const st = new Blob([entry.data]).stream().pipeThrough(ds);
+  return new Uint8Array(await new Response(st).arrayBuffer());
+}
+
+function mimeOf(name) {
+  if (/\.png$/i.test(name)) return 'image/png';
+  if (/\.webp$/i.test(name)) return 'image/webp';
+  if (/\.gif$/i.test(name)) return 'image/gif';
+  if (/\.bmp$/i.test(name)) return 'image/bmp';
+  return 'image/jpeg';
+}
+
+async function toDataURL(img, maxW) {
+  const w = Math.min(img.width, maxW);
+  const h = Math.max(1, Math.round(img.height * w / img.width));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, w, h);
+  return c.toDataURL('image/jpeg', 0.9);
+}
+
+function renderZipItems() {
+  const host = $('#zipGrid');
+  host.innerHTML = '';
+  zipItems.forEach((it, i) => {
+    const el = document.createElement('div');
+    el.className = 'zip-item' + (it.saved ? ' done' : '');
+    el.innerHTML = `
+      <img src="${it.src}" alt="">
+      <span class="zt">${it.crowns.length} 皇冠</span>
+      <div class="zn">${escapeHTML(it.name)}</div>`;
+    el.title = it.crowns.length
+      ? it.crowns.map(c => `R${c.r + 1}C${c.c + 1} · ${c.score}%`).join('  ')
+      : '未识别到皇冠，点击手动标注';
+    el.addEventListener('click', () => loadZipItem(i));
+    host.appendChild(el);
+  });
+}
+
+function loadZipItem(i) {
+  const it = zipItems[i];
+  if (!it) return;
+  draft.img = it.img;
+  draft.src = it.src;
+  draft.rows = it.rows;
+  draft.cols = it.cols;
+  draft.crowns = it.crowns.map(c => ({ r: c.r, c: c.c, x: c.x, y: c.y, score: c.score }));
+  draft.name = it.name;
+  $('#mapRows').value = it.rows;
+  $('#mapCols').value = it.cols;
+  $('#mapName').value = it.name;
+  $('#editorStage').style.display = 'block';
+  $('#saveMap').disabled = false;
+  renderDraft();
+  toast('已载入该图，可直接点格子微调后单独保存');
+}
+
+async function handleZip(file) {
+  if (zipBusy) { toast('正在处理上一个压缩包，请稍候', 'err'); return; }
+  zipBusy = true;
+  const rows = +$('#mapRows').value || 12;
+  const cols = +$('#mapCols').value || 10;
+  resetDraft();
+  $('#zipPanel').style.display = 'block';
+  zipItems.length = 0;
+  $('#zipGrid').innerHTML = '';
+  try {
+    $('#zipCount').textContent = '正在解压…';
+    const buf = await file.arrayBuffer();
+    const entries = readZipEntries(buf);
+    if (!entries.length) {
+      toast('压缩包里没有找到图片（支持 png / jpg / webp / gif / bmp）', 'err');
+      $('#zipPanel').style.display = 'none';
+      return;
+    }
+    for (let i = 0; i < entries.length; i++) {
+      $('#zipCount').textContent = `识别中 ${i + 1}/${entries.length}`;
+      await new Promise(r => setTimeout(r, 8));
+      try {
+        const bytes = await unzipEntry(entries[i]);
+        const url = URL.createObjectURL(new Blob([bytes], { type: mimeOf(entries[i].name) }));
+        const img = await loadImage(url);
+        const crowns = await detectCrowns(img, rows, cols);
+        const src = await toDataURL(img, 1100);
+        zipItems.push({
+          name: entries[i].name.split('/').pop().replace(/\.[^.]+$/, '') || ('底图' + (i + 1)),
+          img, src, crowns, rows, cols, saved: false
+        });
+      } catch (e) { /* 跳过无法解析的文件 */ }
+      renderZipItems();
+      $('#zipCount').textContent = `${zipItems.length} 张图片 · 共 ${zipItems.reduce((n, it) => n + it.crowns.length, 0)} 个皇冠`;
+    }
+    if (!zipItems.length) toast('压缩包里的图片都读不出来，请换个包试试', 'err');
+    else toast(`已解压并识别 ${zipItems.length} 张图，确认后点「全部保存」`);
+  } catch (e) {
+    toast('压缩包解析失败，请确认是标准 zip 文件', 'err');
+    $('#zipPanel').style.display = 'none';
+  } finally {
+    zipBusy = false;
+  }
+}
+
+function clearZip() {
+  zipItems.length = 0;
+  $('#zipGrid').innerHTML = '';
+  $('#zipCount').textContent = '';
+  $('#zipPanel').style.display = 'none';
+}
+
+async function saveZipAll() {
+  const pending = zipItems.filter(it => !it.saved);
+  if (!pending.length) { toast('没有待保存的图片', 'err'); return; }
+  const author = ($('#mapAuthor').value || '').trim() || '匿名寻宝人';
+  const btn = $('#zipSaveAll');
+  btn.disabled = true;
+  let ok = 0, fail = 0, cloudFail = 0;
+  for (let i = 0; i < pending.length; i++) {
+    btn.textContent = `保存中 ${i + 1}/${pending.length}`;
+    await new Promise(r => setTimeout(r, 8));
+    const it = pending[i];
+    const map = {
+      id: uid(), name: it.name, author,
+      rows: it.rows, cols: it.cols,
+      w: it.img.width, h: it.img.height,
+      image: it.src, crowns: it.crowns.slice(),
+      created_at: new Date().toISOString(),
+      origin: cloudReady() ? 'cloud' : 'local'
+    };
+    const local = localMaps();
+    local.unshift(map);
+    if (!saveLocalMaps(local)) { fail++; continue; }
+    if (cloudReady()) {
+      try { await remoteInsert(map); } catch (e) { map.origin = 'local'; cloudFail++; }
+    }
+    it.saved = true; ok++;
+    renderZipItems();
+  }
+  btn.disabled = false;
+  btn.textContent = '全部保存到共享图库';
+  await reloadMaps();
+  if (fail) toast(`已保存 ${ok} 张，${fail} 张因本机存储空间不足未保存，建议先开启云端共享`, 'err');
+  else if (cloudFail) toast(`已保存 ${ok} 张，其中 ${cloudFail} 张仅存本机（云端上传失败）`, 'err');
+  else toast(`已保存 ${ok} 张到底图库`);
+  switchView('gallery');
+}
+
+async function handleUpload(file) {
+  if (!file) { toast('请选择文件', 'err'); return; }
+  if (/\.zip$/i.test(file.name) || /zip/i.test(file.type)) { await handleZip(file); return; }
+  if (!file.type.startsWith('image/')) { toast('请选择图片或 ZIP 压缩包', 'err'); return; }
+  $('#zipPanel').style.display = 'none';
+  const raw = await fileToDataURL(file);
+  const img = await loadImage(raw);
+  draft.img = img;
+  draft.src = await shrink(img, 1100);
+  draft.rows = +$('#mapRows').value || 12;
+  draft.cols = +$('#mapCols').value || 10;
+  $('#editorStage').style.display = 'block';
+  $('#saveMap').disabled = false;
+  if (!draft.name) $('#mapName').value = file.name.replace(/\.[^.]+$/, '');
+  $('#crownCount').textContent = '识别中…';
+  draft.crowns = [];
+  await detectAndRender();
+  if (!draft.crowns.length) {
+    toast('没有匹配到该皇冠图标，可直接点击格子手动标注', 'err');
+  } else {
+    toast(`识别到 ${draft.crowns.length} 个皇冠（相似度 ${draft.crowns.map(c => c.score + '%').join(' / ')}）`);
+  }
+}
+
+async function detectAndRender() {
+  const list = await detectCrowns(draft.img, draft.rows, draft.cols);
+  draft.crowns = list;
+  renderDraft();
+  return list;
+}
+
+function draftMap() {
+  return {
+    id: 'draft', name: 'draft', author: '', rows: draft.rows, cols: draft.cols,
+    w: draft.img.width, h: draft.img.height, image: draft.src, crowns: draft.crowns
+  };
+}
+
+function renderDraft() {
+  const host = $('#uploadStage');
+  renderStage(host, draftMap(), {
+    onCellClick: (r, c) => {
+      const idx = draft.crowns.findIndex(x => x.r === r && x.c === c);
+      if (idx >= 0) draft.crowns.splice(idx, 1);
+      else draft.crowns.push({ r, c, x: (c + .5) / draft.cols, y: (r + .5) / draft.rows });
+      renderDraft();
+    }
+  });
+  $('#crownCount').textContent = draft.crowns.length
+    ? draft.crowns.length + ' 个皇冠 · 相似度 ' + draft.crowns.map(c => (c.score ? c.score + '%' : '手动')).join(' / ')
+    : '0 个皇冠';
+}
+
+async function reDetect(showTip) {
+  if (!draft.img) { if (showTip === true) toast('请先选择图片', 'err'); return; }
+  draft.rows = +$('#mapRows').value || 12;
+  draft.cols = +$('#mapCols').value || 10;
+  $('#crownCount').textContent = '识别中…';
+  await detectAndRender();
+  if (!draft.crowns.length) toast('没有匹配到该皇冠图标，可直接点击格子手动标注', 'err');
+  else toast(`重新识别到 ${draft.crowns.length} 个皇冠（相似度 ${draft.crowns.map(c => c.score + '%').join(' / ')}）`);
+}
+
+async function saveMap() {
+  if (!draft.img) return;
+  const name = ($('#mapName').value || '').trim();
+  const author = ($('#mapAuthor').value || '').trim() || '匿名寻宝人';
+  if (!name) { toast('请填写底图名称', 'err'); return; }
+
+  const map = {
+    id: uid(), name, author,
+    rows: draft.rows, cols: draft.cols,
+    w: draft.img.width, h: draft.img.height,
+    image: draft.src,
+    crowns: draft.crowns.slice(),
+    created_at: new Date().toISOString(),
+    origin: cloudReady() ? 'cloud' : 'local'
+  };
+
+  const local = localMaps();
+  local.unshift(map);
+  saveLocalMaps(local);
+
+  if (cloudReady()) {
+    try {
+      await remoteInsert(map);
+      toast('已上传到云端，全站可见');
+    } catch (e) {
+      map.origin = 'local';
+      toast('云端上传失败，已保存到本机', 'err');
+    }
+  } else {
+    toast('已保存（本地模式）');
+  }
+
+  resetDraft();
+  await reloadMaps();
+  switchView('gallery');
+}
+
+function resetDraft() {
+  draft.img = null; draft.src = null; draft.crowns = [];
+  $('#editorStage').style.display = 'none';
+  $('#saveMap').disabled = true;
+  $('#mapName').value = '';
+  $('#uploadFile').value = '';
+}
+
+/* ============ 解码流程 ============ */
+function updateProgress(txt, sub) {
+  $('#decodeProgress').style.display = 'block';
+  $('#scanText').textContent = txt;
+  if (sub !== undefined) $('#scanSub').textContent = sub;
+}
+
+async function decodeImage(file) {
+  if (!file || !file.type.startsWith('image/')) { toast('请选择图片文件', 'err'); return; }
+  if (!state.maps.length) { toast('图库为空，请先上传底图', 'err'); return; }
+
+  $('#decodeResult').style.display = 'none';
+  updateProgress('正在比对全库底图…', `共 ${state.maps.length} 张底图 · 多尺度滑动窗口`);
+  await new Promise(r => setTimeout(r, 60));
+
+  const raw = await fileToDataURL(file);
+  const qImgRaw = await loadImage(raw);
+  const qPrep = prepareRoi(qImgRaw);
+  const qImg = qPrep.img;
+
+  const scored = [];
+  for (let i = 0; i < state.maps.length; i++) {
+    const m = state.maps[i];
+    updateProgress('正在比对全库底图…', `第 ${i + 1}/${state.maps.length} 张 · ${m.name}`);
+    await new Promise(r => setTimeout(r, 16));
+    try {
+      const baseImgRaw = await loadImage(m.image);
+      const bPrep = prepareRoi(baseImgRaw);
+      const cm = await coarseMatch(bPrep.img, qImg);
+      cm.roi = bPrep.roi;
+      scored.push({ map: m, baseImgRaw, baseImg: bPrep.img, coarse: cm, baseW: baseImgRaw.width, baseH: baseImgRaw.height });
+    } catch (e) { /* 跳过损坏图片 */ }
+  }
+
+  if (!scored.length) {
+    $('#decodeProgress').style.display = 'none';
+    toast('未能加载图库底图，请检查数据', 'err');
+    return;
+  }
+
+  scored.sort((a, b) => b.coarse.score - a.coarse.score);
+  const tops = scored.slice(0, 3);
+
+  for (const t of tops) {
+    updateProgress('精修匹配位置…', t.map.name);
+    await new Promise(r => setTimeout(r, 16));
+    const r1 = refineMatch(t.baseImg, qImg, t.coarse, 240, 8);
+    const r2 = refineMatch(t.baseImg, qImg, r1, 480, 3);
+    r2.roi = t.coarse.roi;
+    t.final = r2;
+  }
+  tops.sort((a, b) => b.final.score - a.final.score);
+
+  $('#decodeProgress').style.display = 'none';
+  showResult(tops, qImg);
+}
+
+function showResult(tops, qImg) {
+  lastMatchAr = qImg ? qImg.height / qImg.width : 1;
+  const best = tops[0];
+  const map = best.map;
+  const f = best.final;
+  const score = Math.max(0, Math.round(f.score * 100));
+
+  state.lastMatch = { map, score, f };
+  $('#statMatch').textContent = score + '%';
+
+  const mapAr = (map.w && map.h) ? map.h / map.w : (map.rows || 12) / (map.cols || 10);
+  const bw = best.baseW || map.w || f.W;
+  const bh = best.baseH || map.h || Math.round(f.W * mapAr);
+  const box = matchBoxFrac(f, bw, bh, qImg.height / qImg.width);
+
+  $('#decodeResult').style.display = 'block';
+  $('#resultTitle').textContent = map.name;
+  renderStage($('#resultStage'), map, { matchBox: box });
+
+  const cands = tops.map(t => Math.max(0, Math.round(t.final.score * 100)));
+  const candSkew = new Set(cands).size === 1;
+
+  $('#resultCoords').innerHTML = (map.crowns || []).map(cw =>
+    `<span class="coord">R${cw.r + 1} · C${cw.c + 1}${cw.score ? ` · ${cw.score}%` : ''}</span>`).join('');
+
+  // 仪表盘
+  const R = 52, C = 2 * Math.PI * R;
+  const col = score >= 80 ? '#5ff0c0' : score >= 60 ? '#f5c542' : '#ff5f3c';
+  $('#gaugeBox').innerHTML = `
+    <svg width="132" height="132" viewBox="0 0 132 132">
+      <circle cx="66" cy="66" r="${R}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="11"/>
+      <circle cx="66" cy="66" r="${R}" fill="none" stroke="${col}" stroke-width="11" stroke-linecap="round"
+        stroke-dasharray="${C}" stroke-dashoffset="${C}" style="transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)">
+      </circle>
+    </svg>
+    <div class="val"><b>${score}<small style="font-size:14px">%</small></b><span>SIMILARITY</span></div>`;
+  requestAnimationFrame(() => {
+    const c = $('#gaugeBox circle:last-of-type');
+    if (c) c.style.strokeDashoffset = C * (1 - score / 100);
+  });
+
+  $('#confLabel').textContent = score >= 80 ? '高置信度 · 底图与位置可靠'
+    : score >= 60 ? '中等置信度 · 建议人工核对'
+    : '低置信度 · 图库中可能没有这张底图';
+
+  $('#matchInfo').innerHTML = `
+    匹配底图：<span style="color:#f4ecd8">${escapeHTML(map.name)}</span><br>
+    上传者：${escapeHTML(map.author)}<br>
+    皇冠总数：<span style="color:#ffe9a3">${map.crowns.length}</span> 个<br>
+    棋盘规格：${map.cols} 列 × ${map.rows} 行<br>
+    <span style="opacity:.75">虚线框为你的截图在底图中的位置</span>`;
+
+  const cl = $('#candidateList');
+  cl.innerHTML = '';
+  tops.forEach((t, i) => {
+    const s = Math.max(0, Math.round(t.final.score * 100));
+    const el = document.createElement('div');
+    el.className = 'cand';
+    el.innerHTML = `
+      <img src="${t.map.image}" alt="">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;color:#efe4cc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.map.name)}</div>
+        <div class="bar"><i style="width:${s}%"></i></div>
+      </div>
+      <div class="latin" style="font-size:13px;color:${i === 0 ? '#ffe9a3' : '#a294c0'}">${s}%</div>`;
+    el.addEventListener('click', () => {
+      const nt = tops.slice().sort((a, b) => (a === t ? -1 : b === t ? 1 : 0));
+      showResult(nt, qImg);
+    });
+    cl.appendChild(el);
+  });
+
+  if (candSkew && tops.length > 1) {
+    $('#confLabel').textContent += '（候选分数接近，建议人工确认）';
+  }
+}
+
+/* ============ 标注图导出 ============ */
+async function downloadAnnotated(map, match) {
+  const img = await loadImage(map.image);
+  const c = document.createElement('canvas');
+  c.width = img.width; c.height = img.height;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  if (match && match.f) {
+    const f = match.f;
+    const bx = matchBoxFrac(f, img.width, img.height, match.ar || 1);
+    ctx.save();
+    ctx.strokeStyle = '#5ff0c0';
+    ctx.lineWidth = Math.max(2, c.width * .004);
+    ctx.setLineDash([c.width * .012, c.width * .008]);
+    ctx.strokeRect(bx.x * c.width, bx.y * c.height, bx.w * c.width, bx.h * c.height);
+    ctx.restore();
+  }
+
+  const rad = c.width * .028;
+  (map.crowns || []).forEach(cw => {
+    const x = cw.x * c.width, y = cw.y * c.height;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(x, y, rad * 1.35, 0, 7);
+    ctx.fillStyle = 'rgba(245,197,66,.18)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, rad, 0, 7);
+    ctx.strokeStyle = '#f5c542'; ctx.lineWidth = Math.max(2, c.width * .005); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - rad * .5, y); ctx.lineTo(x + rad * .5, y);
+    ctx.moveTo(x, y - rad * .5); ctx.lineTo(x, y + rad * .5);
+    ctx.stroke();
+    const label = `R${cw.r + 1}C${cw.c + 1}`;
+    ctx.font = `700 ${Math.round(c.width * .022)}px Cinzel, serif`;
+    const tw2 = ctx.measureText(label).width;
+    const bw = tw2 + rad * .7, bh = rad * 1.1;
+    ctx.fillStyle = 'rgba(10,6,18,.78)';
+    ctx.strokeStyle = 'rgba(245,197,66,.6)';
+    ctx.lineWidth = Math.max(1, c.width * .002);
+    const bx = x - bw / 2, by = y + rad * 1.25;
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, bh / 2); ctx.fill(); ctx.stroke(); }
+    else { ctx.fillRect(bx, by, bw, bh); ctx.strokeRect(bx, by, bw, bh); }
+    ctx.fillStyle = '#ffe9a3';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, by + bh / 2);
+    ctx.restore();
+  });
+
+  const a = document.createElement('a');
+  a.download = '藏宝图标注_' + map.name.replace(/[\\/:*?"<>|]/g, '_') + '.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+  toast('标注图已导出');
+}
+
+/* ============ 详情弹窗 ============ */
+let detailMap = null;
+function openDetail(m) {
+  detailMap = m;
+  $('#detailTitle').textContent = m.name;
+  renderStage($('#detailStage'), m, {});
+  $('#detailMeta').innerHTML = `${escapeHTML(m.author)} · ${timeAgo(m.created_at)} · ${m.cols}×${m.rows} · ${m.crowns.length} 个皇冠标注`;
+  $('#detailCoords').innerHTML = (m.crowns || []).map(cw => `<span class="coord">R${cw.r + 1} · C${cw.c + 1}${cw.score ? ' · ' + cw.score + '%' : ''}</span>`).join('');
+  $('#detailModal').classList.add('open');
+}
+
+async function removeMap(m) {
+  if (!confirm(`确定删除「${m.name}」吗？`)) return;
+  const local = localMaps().filter(x => x.id !== m.id);
+  saveLocalMaps(local);
+  if (m.origin === 'cloud' && cloudReady()) {
+    try { await remoteDelete(m.id); } catch (e) { toast('云端删除失败', 'err'); }
+  }
+  await reloadMaps();
+  toast('已删除');
+}
+
+/* ============ 数据加载 ============ */
+async function reloadMaps() {
+  let list = localMaps().filter(m => m && !String(m.id).startsWith('seed-'));
+  saveLocalMaps(list);
+  localStorage.removeItem(LS_MAPS + '_seeded');
+  let remote = [];
+  if (cloudReady()) {
+    try { remote = await remoteList(); }
+    catch (e) { toast('云端连接失败，使用本地数据', 'err'); }
+  }
+  const byId = new Map();
+  remote.forEach(m => byId.set(m.id, m));
+  list.forEach(m => { if (!byId.has(m.id)) byId.set(m.id, m); else byId.get(m.id).origin = 'cloud'; });
+  state.maps = Array.from(byId.values());
+  renderGallery();
+  updateCloudChip();
+}
+
+function updateCloudChip() {
+  const ok = cloudReady();
+  $('#cloudDot').className = 'dot' + (ok ? '' : ' off');
+  $('#cloudText').textContent = ok
+    ? (state.cloud.mode === 'supabase' ? 'Supabase 云端共享中' : '自定义云端共享中')
+    : '本地模式';
+}
+
+/* ============ 绑定事件 ============ */
+function bindDrop(dropEl, inputEl, handler) {
+  dropEl.addEventListener('click', () => inputEl.click());
+  inputEl.addEventListener('change', e => { if (e.target.files[0]) handler(e.target.files[0]); });
+  ['dragenter', 'dragover'].forEach(ev => dropEl.addEventListener(ev, e => { e.preventDefault(); dropEl.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => dropEl.addEventListener(ev, e => { e.preventDefault(); dropEl.classList.remove('over'); }));
+  dropEl.addEventListener('drop', e => { if (e.dataTransfer.files[0]) handler(e.dataTransfer.files[0]); });
+}
+
+function initUI() {
+  $$('.tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+  $('#gotoUpload').addEventListener('click', () => switchView('upload'));
+  $('#searchInput').addEventListener('input', renderGallery);
+
+  bindDrop($('#uploadDrop'), $('#uploadFile'), handleUpload);
+  bindDrop($('#decodeDrop'), $('#decodeFile'), decodeImage);
+
+  $('#zipSaveAll').addEventListener('click', saveZipAll);
+  $('#zipClear').addEventListener('click', clearZip);
+  $('#autoDetect').addEventListener('click', () => reDetect(true));
+  $('#saveMap').addEventListener('click', saveMap);
+  $('#mapRows').addEventListener('change', () => reDetect());
+  $('#mapCols').addEventListener('change', () => reDetect());
+
+  $('#downloadBtn').addEventListener('click', () => {
+    if (!state.lastMatch || !lastMatchAr) return;
+    downloadAnnotated(state.lastMatch.map, { f: state.lastMatch.f, ar: lastMatchAr });
+  });
+
+  $('#detailClose').addEventListener('click', () => $('#detailModal').classList.remove('open'));
+  $('#detailModal').addEventListener('click', e => { if (e.target.id === 'detailModal') $('#detailModal').classList.remove('open'); });
+  $('#detailDelete').addEventListener('click', () => {
+    if (!detailMap) return;
+    $('#detailModal').classList.remove('open');
+    removeMap(detailMap);
+  });
+  $('#detailDownload').addEventListener('click', () => { if (detailMap) downloadAnnotated(detailMap, null); });
+
+  // 云端设置
+  const modeSel = $('#cloudMode');
+  modeSel.value = state.cloud.mode;
+  $('#cloudUrl').value = state.cloud.url || '';
+  $('#cloudKey').value = state.cloud.key || '';
+  $('#cloudTable').value = state.cloud.table || 'treasure_maps';
+  const syncFields = () => {
+    $('#cloudFields').style.display = modeSel.value === 'local' ? 'none' : 'block';
+    $('#tableField').style.display = modeSel.value === 'supabase' ? 'block' : 'none';
+  };
+  syncFields();
+  modeSel.addEventListener('change', syncFields);
+
+  $('#saveCloud').addEventListener('click', async () => {
+    state.cloud.mode = modeSel.value;
+    state.cloud.url = $('#cloudUrl').value.trim();
+    state.cloud.key = $('#cloudKey').value.trim();
+    state.cloud.table = $('#cloudTable').value.trim() || 'treasure_maps';
+    persistCloudCfg();
+    await reloadMaps();
+    toast(state.cloud.mode === 'local' ? '已切换到本地模式' : '云端设置已保存');
+  });
+
+  $('#testCloud').addEventListener('click', async () => {
+    const bak = { ...state.cloud };
+    state.cloud.mode = modeSel.value;
+    state.cloud.url = $('#cloudUrl').value.trim();
+    state.cloud.key = $('#cloudKey').value.trim();
+    state.cloud.table = $('#cloudTable').value.trim() || 'treasure_maps';
+    if (!cloudReady()) { toast('请先填写接口地址与公钥', 'err'); Object.assign(state.cloud, bak); return; }
+    try {
+      const list = await remoteList();
+      toast(`连接成功，云端已有 ${list.length} 张底图`);
+    } catch (e) {
+      toast('连接失败：' + e.message, 'err');
+    }
+    state.cloud = bak;
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') $('#detailModal').classList.remove('open');
+  });
+}
+
+(async function boot() {
+  loadCloudCfg();
+  initUI();
+  await reloadMaps();
+})();
+
+</script>
+</body>
+</html>
